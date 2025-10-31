@@ -12,7 +12,7 @@ import 'form_receita_intent.dart';
 class FormReceitaView extends StatefulWidget {
   final Receita? receita;
 
-  const FormReceitaView({Key? key, this.receita}) : super(key: key);
+  const FormReceitaView({super.key, this.receita});
 
   @override
   State<FormReceitaView> createState() => _FormReceitaViewState();

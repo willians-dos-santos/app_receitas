@@ -7,7 +7,7 @@ import '../features/receitas/presentation/lista_receitas/lista_receitas_viewmode
 import '../features/receitas/presentation/lista_receitas/lista_receitas_view.dart';
 
 class AppWidget extends StatelessWidget {
-  const AppWidget({Key? key}) : super(key: key);
+  const AppWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

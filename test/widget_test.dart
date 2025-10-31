@@ -43,7 +43,7 @@ void main() {
 
       expect(find.byIcon(Icons.add), findsOneWidget);
 
-      expect(find.text('Nenhuma receita cadastrada.'), findsOneWidget);
+      expect(find.text('Nenhuma receita cadastrada ainda.\nToque no "+" para adicionar a primeira!'), findsOneWidget);
     });
   });
 }

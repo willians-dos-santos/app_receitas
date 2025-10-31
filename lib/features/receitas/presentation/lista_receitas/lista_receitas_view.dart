@@ -8,7 +8,7 @@ import 'lista_receitas_state.dart';
 import 'lista_receitas_viewmodel.dart';
 
 class ListaReceitasView extends StatefulWidget {
-  const ListaReceitasView({Key? key}) : super(key: key);
+  const ListaReceitasView({super.key});
 
   @override
   State<ListaReceitasView> createState() => _ListaReceitasViewState();

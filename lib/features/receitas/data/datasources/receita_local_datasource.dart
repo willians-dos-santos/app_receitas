@@ -6,6 +6,7 @@ class ReceitaLocalDataSource implements IReceitaLocalDataSource {
   final Box<ReceitaModel> box;
   ReceitaLocalDataSource(this.box);
 
+  @override
   Stream<List<ReceitaModel>> getTodas() async* {
     // yield inicial
     yield box.values.toList();
@@ -13,6 +14,8 @@ class ReceitaLocalDataSource implements IReceitaLocalDataSource {
     yield* box.watch().map((event) => box.values.toList());
   }
 
+  @override
   Future<void> salvar(ReceitaModel model) => box.put(model.id, model);
+  @override
   Future<void> deletar(String id) => box.delete(id);
 }
