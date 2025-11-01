@@ -1,11 +1,13 @@
 import 'package:app_receitas/app/di_setup.dart';
-import 'package:app_receitas/features/receitas/presentation/form_receita/form_receita_view.dart';
 import 'package:flutter/material.dart';
-import 'dart:io'; 
+import 'dart:io';
 import '../../domain/entities/receita.dart';
 import 'lista_receitas_intent.dart';
 import 'lista_receitas_state.dart';
 import 'lista_receitas_viewmodel.dart';
+
+import 'package:app_receitas/features/receitas/presentation/form_receita/form_receita_view.dart';
+import 'package:app_receitas/features/receitas/presentation/detalhe_receita/detalhe_receita_view.dart';
 
 class ListaReceitasView extends StatefulWidget {
   const ListaReceitasView({super.key});
@@ -15,33 +17,57 @@ class ListaReceitasView extends StatefulWidget {
 }
 
 class _ListaReceitasViewState extends State<ListaReceitasView> {
-  
   late final ListaReceitasViewModel viewModel;
 
   @override
   void initState() {
     super.initState();
-   
-    viewModel = getIt();
-    
+    viewModel = getIt<ListaReceitasViewModel>();
+
+    viewModel.despachar(CarregarReceitasIntent());
   }
 
-  @override
-  void dispose() {
-    viewModel.dispose();
-    super.dispose();
+  void _mostrarConfirmacaoExcluir(BuildContext context, Receita receita) {
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmar Exclusão'),
+          content: Text(
+            'Você tem certeza que deseja excluir a receita "${receita.titulo}"? Esta ação não pode ser desfeita.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Excluir'),
+              onPressed: () {
+                viewModel.despachar(DeletarReceitaIntent(receita.id));
+
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minhas Receitas'),
-      ),
+      appBar: AppBar(title: const Text('Minhas Receitas')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navegar para a tela de formulário (modo NOVA RECEITA)
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const FormReceitaView()),
@@ -50,19 +76,16 @@ class _ListaReceitasViewState extends State<ListaReceitasView> {
         child: const Icon(Icons.add),
       ),
       body: StreamBuilder<ListaReceitasState>(
-        
         stream: viewModel.state,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            
             return const Center(child: CircularProgressIndicator());
           }
 
           final state = snapshot.data!;
 
-          // ---- Tratamento de Status ----
-
-          if (state.status == ListaStatus.carregando && state.receitas.isEmpty) {
+          if (state.status == ListaStatus.carregando &&
+              state.receitas.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -88,7 +111,6 @@ class _ListaReceitasViewState extends State<ListaReceitasView> {
             );
           }
 
-          // ---- Estado de Sucesso (com dados) ----
           return _buildListaReceitas(state.receitas);
         },
       ),
@@ -104,7 +126,6 @@ class _ListaReceitasViewState extends State<ListaReceitasView> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
             leading: CircleAvatar(
-              // Mostra a imagem ou a primeira letra do título
               backgroundImage: receita.caminhoImagem != null
                   ? FileImage(File(receita.caminhoImagem!))
                   : null,
@@ -115,27 +136,26 @@ class _ListaReceitasViewState extends State<ListaReceitasView> {
             title: Text(receita.titulo),
             subtitle: Text('${receita.tempoPreparo} minutos'),
             trailing: IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
+              icon: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+
               onPressed: () {
-                // Despacha o intent de deleção
-                viewModel.despachar(DeletarReceitaIntent(receita.id));
+                _mostrarConfirmacaoExcluir(context, receita);
               },
             ),
-            
             onTap: () {
-              // Navegar para a tela de formulário (modo edição/visualização)
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => FormReceitaView(receita: receita),
+                  builder: (_) => DetalheReceitaView(receitaId: receita.id),
                 ),
               );
             },
-            
           ),
         );
       },
     );
   }
 }
-

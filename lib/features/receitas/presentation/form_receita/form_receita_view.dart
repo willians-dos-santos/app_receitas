@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:app_receitas/app/di_setup.dart';
+import 'package:app_receitas/app/di_setup.dart'; 
 import 'package:app_receitas/features/receitas/domain/entities/receita.dart';
+import 'package:uuid/uuid.dart'; 
+import 'dart:io'; 
 import 'package:image_picker/image_picker.dart';
-import 'package:uuid/uuid.dart';
-import 'dart:io';
 
 import 'form_receita_viewmodel.dart';
 import 'form_receita_state.dart';
 import 'form_receita_intent.dart';
 
 class FormReceitaView extends StatefulWidget {
-  final Receita? receita;
+  final Receita? receita; 
 
   const FormReceitaView({super.key, this.receita});
 
@@ -28,35 +28,27 @@ class _FormReceitaViewState extends State<FormReceitaView> {
   late final TextEditingController _tempoPreparoController;
 
   File? _imagemParaExibir;
-  bool _isEditing = false;
 
   @override
   void initState() {
     super.initState();
     _viewModel = getIt<FormReceitaViewModel>();
 
-    if (widget.receita == null) {
-      _isEditing = true;
-    } else {
-      _isEditing = false;
-    }
-
+    
     _tituloController = TextEditingController(text: widget.receita?.titulo);
-    _ingredientesController = TextEditingController(
-      text: widget.receita?.ingredientes,
-    );
-    _preparoController = TextEditingController(
-      text: widget.receita?.modoPreparo,
-    );
-
-    _tempoPreparoController = TextEditingController(
-      text: widget.receita?.tempoPreparo,
-    );
+    _ingredientesController =
+        TextEditingController(text: widget.receita?.ingredientes);
+    _preparoController =
+        TextEditingController(text: widget.receita?.modoPreparo);
+    
+    _tempoPreparoController =
+        TextEditingController(text: widget.receita?.tempoPreparo); 
 
     if (widget.receita?.caminhoImagem != null) {
       _imagemParaExibir = File(widget.receita!.caminhoImagem!);
     }
 
+    
     _viewModel.state.listen((state) {
       if (state.imagemSelecionada != null) {
         setState(() {
@@ -71,6 +63,8 @@ class _FormReceitaViewState extends State<FormReceitaView> {
             backgroundColor: Colors.green,
           ),
         );
+        
+        
         Navigator.of(context).pop();
       }
 
@@ -94,6 +88,63 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     _tempoPreparoController.dispose();
     super.dispose();
   }
+
+  
+  String _limparTextoColado(String texto) {
+    
+    var textoLimpo = texto.split('\n')
+        .map((linha) => linha.trim())
+        .join('\n');
+
+    
+    
+    
+    
+    final regexNumeroLinhaSeparada = RegExp(r'^(\d+)$(\n^[a-zA-ZÀ-ú])', multiLine: true);
+    textoLimpo = textoLimpo.replaceAllMapped(regexNumeroLinhaSeparada, (match) {
+      
+      
+      
+      return '${match.group(1)}. ${match.group(2)!.substring(1)}';
+    });
+
+    
+    
+    textoLimpo = textoLimpo.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+
+    
+    return textoLimpo.trim();
+  }
+  
+
+
+  void _tentarSalvar() {
+    if (_formKey.currentState?.validate() ?? false) {
+      
+      
+      final ingredientesLimpo = _limparTextoColado(_ingredientesController.text);
+      final preparoLimpo = _limparTextoColado(_preparoController.text);
+      
+
+      final receita = Receita(
+        
+        id: widget.receita?.id ?? const Uuid().v4(),
+        titulo: _tituloController.text,
+        
+        
+        ingredientes: ingredientesLimpo,
+        modoPreparo: preparoLimpo,
+        
+        tempoPreparo: _tempoPreparoController.text, 
+        
+        caminhoImagem: _imagemParaExibir?.path,
+      );
+
+      _viewModel.despachar(SalvarReceitaIntent(receita));
+    }
+  }
+
+  
   void _mostrarOpcoesFonteImagem() {
     showModalBottomSheet(
       context: context,
@@ -105,7 +156,7 @@ class _FormReceitaViewState extends State<FormReceitaView> {
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Galeria'),
                 onTap: () {
-                  _viewModel.dispatchIntent(
+                  _viewModel.despachar(
                     const SelecionarImagemIntent(ImageSource.gallery),
                   );
                   Navigator.of(ctx).pop();
@@ -115,7 +166,7 @@ class _FormReceitaViewState extends State<FormReceitaView> {
                 leading: const Icon(Icons.photo_camera),
                 title: const Text('Câmera'),
                 onTap: () {
-                  _viewModel.dispatchIntent(
+                  _viewModel.despachar(
                     const SelecionarImagemIntent(ImageSource.camera),
                   );
                   Navigator.of(ctx).pop();
@@ -128,45 +179,16 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     );
   }
 
-  void _tentarSalvar() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final receita = Receita(
-        id: widget.receita?.id ?? const Uuid().v4(),
-        titulo: _tituloController.text,
-        ingredientes: _ingredientesController.text,
-        modoPreparo: _preparoController.text,
-
-        tempoPreparo: _tempoPreparoController.text,
-
-        caminhoImagem: _imagemParaExibir?.path,
-      );
-
-      _viewModel.despachar(SalvarReceitaIntent(receita));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         title: Text(
           widget.receita == null
               ? 'Nova Receita'
-              : (_isEditing ? 'Editar Receita' : 'Visualizar Receita'),
+              : 'Editar Receita',
         ),
-
-        actions: [
-          if (widget.receita != null)
-            IconButton(
-              icon: Icon(_isEditing ? Icons.visibility_off : Icons.edit),
-              tooltip: _isEditing ? 'Cancelar Edição' : 'Editar Receita',
-              onPressed: () {
-                setState(() {
-                  _isEditing = !_isEditing;
-                });
-              },
-            ),
-        ],
       ),
       body: SafeArea(
         child: StreamBuilder<FormReceitaState>(
@@ -174,11 +196,13 @@ class _FormReceitaViewState extends State<FormReceitaView> {
           initialData: FormReceitaState.initial(),
           builder: (context, snapshot) {
             final state = snapshot.data!;
-
+      
+            
             if (state.status == FormStatus.carregando) {
               return const Center(child: CircularProgressIndicator());
             }
-
+      
+            
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -192,25 +216,24 @@ class _FormReceitaViewState extends State<FormReceitaView> {
                       controller: _tituloController,
                       label: 'Título',
                       icon: Icons.title,
-                      enabled: _isEditing,
+                      textCapitalization: TextCapitalization.words, 
                     ),
                     const SizedBox(height: 16),
-
+      
                     _buildTextFormField(
                       controller: _tempoPreparoController,
                       label: 'Tempo de Preparo (ex: 30 min)',
                       icon: Icons.timer,
                       keyboardType: TextInputType.text,
-                      enabled: _isEditing,
                     ),
-
+      
                     const SizedBox(height: 16),
                     _buildTextFormField(
                       controller: _ingredientesController,
                       label: 'Ingredientes',
                       icon: Icons.list_alt,
                       maxLines: 5,
-                      enabled: _isEditing,
+                      keyboardType: TextInputType.multiline, 
                     ),
                     const SizedBox(height: 16),
                     _buildTextFormField(
@@ -218,19 +241,21 @@ class _FormReceitaViewState extends State<FormReceitaView> {
                       label: 'Modo de Preparo',
                       icon: Icons.soup_kitchen_outlined,
                       maxLines: 8,
-                      enabled: _isEditing,
+                      keyboardType: TextInputType.multiline, 
+                      textCapitalization: TextCapitalization.sentences, 
+
                     ),
                     const SizedBox(height: 32),
 
-                    if (_isEditing)
-                      ElevatedButton.icon(
-                        onPressed: _tentarSalvar,
-                        icon: const Icon(Icons.save),
-                        label: const Text('Salvar Receita'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
+                    
+                    ElevatedButton.icon(
+                      onPressed: _tentarSalvar,
+                      icon: const Icon(Icons.save),
+                      label: const Text('Salvar Receita'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -241,6 +266,7 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     );
   }
 
+  
   Widget _buildSeletorImagem() {
     return Center(
       child: Stack(
@@ -249,45 +275,43 @@ class _FormReceitaViewState extends State<FormReceitaView> {
           CircleAvatar(
             radius: 60,
             backgroundColor: Colors.grey[200],
-            backgroundImage: _imagemParaExibir != null
-                ? FileImage(_imagemParaExibir!)
-                : null,
+            backgroundImage:
+                _imagemParaExibir != null ? FileImage(_imagemParaExibir!) : null,
             child: _imagemParaExibir == null
                 ? Icon(Icons.camera_alt, size: 50, color: Colors.grey[600])
                 : null,
           ),
-
-          if (_isEditing)
-            FloatingActionButton(
-              mini: true,
-              onPressed: () {
-               _mostrarOpcoesFonteImagem();
-              },
-              child: const Icon(Icons.edit),
-            ),
+          FloatingActionButton(
+            mini: true,
+            onPressed: _mostrarOpcoesFonteImagem,
+            child: const Icon(Icons.edit),
+          ),
         ],
       ),
     );
   }
 
+  
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     int maxLines = 1,
     TextInputType keyboardType = TextInputType.text,
-    bool enabled = true,
+    TextCapitalization textCapitalization = TextCapitalization.none, 
   }) {
     return TextFormField(
       controller: controller,
-      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       keyboardType: keyboardType,
       maxLines: maxLines,
+      textCapitalization: textCapitalization, 
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Este campo é obrigatório';
@@ -297,3 +321,4 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     );
   }
 }
+

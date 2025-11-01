@@ -44,6 +44,7 @@ class AppWidget extends StatelessWidget {
           ),
           floatingActionButtonTheme: FloatingActionButtonThemeData(
             backgroundColor: Colors.deepPurple[600],
+            foregroundColor: Colors.white,
           ),
         ),
         home: const ListaReceitasView(),
