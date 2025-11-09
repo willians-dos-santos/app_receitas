@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:app_receitas/features/receitas/domain/entities/receita.dart';
 import 'package:equatable/equatable.dart';
-import 'package:image_picker/image_picker.dart';
+
+enum FonteImagem { camera, galeria }
 
 abstract class FormReceitaIntent extends Equatable {
   const FormReceitaIntent();
@@ -8,12 +11,12 @@ abstract class FormReceitaIntent extends Equatable {
   List<Object?> get props => [];
 }
 
-class SelecionarImagemIntent extends FormReceitaIntent {
-  final ImageSource source;
-  const SelecionarImagemIntent(this.source);
+class ImagemSelecionadaIntent extends FormReceitaIntent {
+  final File? imagem;
+  const ImagemSelecionadaIntent(this.imagem);
 
   @override
-  List<Object> get props => [source];
+  List<Object?> get props => [imagem];
 }
 
 class SalvarReceitaIntent extends FormReceitaIntent {

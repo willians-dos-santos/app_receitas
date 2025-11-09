@@ -1,7 +1,6 @@
 import 'package:app_receitas/features/receitas/presentation/form_receita/form_receita_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import '../features/receitas/data/datasources/i_receita_local_datasource.dart';
 import '../features/receitas/data/datasources/receita_local_datasource.dart';
 import '../features/receitas/data/models/receita_model.dart';
@@ -15,17 +14,10 @@ import '../features/receitas/presentation/lista_receitas/lista_receitas_viewmode
 // Instância global do GetIt
 final getIt = GetIt.instance;
 
-
 Future<void> setupDI() async {
-  
-
-  
   final receitaBox = await Hive.openBox<ReceitaModel>('receitas');
   getIt.registerSingleton<Box<ReceitaModel>>(receitaBox);
 
-  getIt.registerLazySingleton(() => ImagePicker());
-
-  
   getIt.registerLazySingleton<GetTodasReceitasUseCase>(
     () => GetTodasReceitasUseCase(getIt<IReceitaRepository>()),
   );
@@ -36,31 +28,24 @@ Future<void> setupDI() async {
     () => DeletarReceitaUseCase(getIt<IReceitaRepository>()),
   );
 
-  
   getIt.registerLazySingleton<IReceitaRepository>(
     () => ReceitaRepositoryImpl(
-      localDataSource: getIt<IReceitaLocalDataSource>(),     
+      localDataSource: getIt<IReceitaLocalDataSource>(),
     ),
   );
 
-  
   getIt.registerLazySingleton<IReceitaLocalDataSource>(
-    () => ReceitaLocalDataSource(
-      getIt<Box<ReceitaModel>>(),
-    ),
+    () => ReceitaLocalDataSource(getIt<Box<ReceitaModel>>()),
   );
 
   getIt.registerFactory<ListaReceitasViewModel>(
     () => ListaReceitasViewModel(
       getTodasReceitas: getIt(),
-      deletarReceita: getIt(),      
+      deletarReceita: getIt(),
     ),
   );
 
   getIt.registerFactory<FormReceitaViewModel>(
-    () => FormReceitaViewModel(
-        salvarReceita: getIt(), 
-        imagePicker: getIt()
-    ),
+    () => FormReceitaViewModel(salvarReceitaUseCase: getIt()),
   );
 }

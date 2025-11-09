@@ -47,5 +47,13 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSCameraUsageDescription</key>
+		<string>Esta app precisa de acesso à câmara para tirar fotos de receitas.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Esta app precisa de acesso à galeria para selecionar fotos de receitas.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Esta app precisa de acesso ao microfone (caso grave vídeo de receitas).</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Esta app precisa de acesso para guardar a foto da receita na sua galeria.</string>
 	</dict>
 </plist>

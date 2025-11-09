@@ -78,7 +78,7 @@ class DetalheReceitaView extends StatelessWidget {
     return Hero(
       tag: 'receita_imagem_$id',
       child: Container(
-        height: 250,
+        height: 350,
         decoration: BoxDecoration(
           color: Colors.grey[300],
           image: caminhoImagem != null

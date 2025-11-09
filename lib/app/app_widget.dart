@@ -48,6 +48,7 @@ class AppWidget extends StatelessWidget {
           ),
         ),
         home: const ListaReceitasView(),
+        locale: Locale('en', 'US'),
       ),
     );
   }

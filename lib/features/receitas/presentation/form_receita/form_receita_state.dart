@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'dart:io';
 
-enum FormStatus { ocioso, carregando, sucesso, erro }
+enum FormStatus { ocioso, carregando, salvoComSucesso, sucesso, erro }
 
 class FormReceitaState extends Equatable {
   final FormStatus status;
