@@ -2,7 +2,7 @@
 
 Um aplicativo móvel para gestão pessoal de receitas culinárias, desenvolvido em **Flutter** com foco em arquitetura limpa, performance e inteligência artificial.
 
-Este projeto foi desenvolvido originalmente como atividade prática da disciplina **M4.25 | Desenvolvimento de Aplicativos Móveis nas Engenharias** da faculdade **Unimar**, e evoluído com recursos de IA Generativa.**Unimar**.
+Este projeto foi desenvolvido originalmente como atividade prática da disciplina **M4.25 | Desenvolvimento de Aplicativos Móveis nas Engenharias** da faculdade **Unimar**, e evoluído com recursos de IA Generativa.
 
 ---
 
