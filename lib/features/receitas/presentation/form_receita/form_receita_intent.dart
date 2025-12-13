@@ -26,3 +26,12 @@ class SalvarReceitaIntent extends FormReceitaIntent {
   @override
   List<Object?> get props => [receita];
 }
+
+class GerarReceitaIAIntent extends FormReceitaIntent {
+  final String prompt;
+  final String? caminhoImagem;
+  const GerarReceitaIAIntent(this.prompt, {this.caminhoImagem});
+  
+  @override
+  List<Object?> get props => [prompt, caminhoImagem];
+}

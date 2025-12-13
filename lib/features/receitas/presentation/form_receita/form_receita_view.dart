@@ -1,4 +1,5 @@
 import 'package:app_receitas/app/pt_br_picker_delegate.dart';
+import 'package:app_receitas/features/receitas/data/datasources/i_receita_llm_datasource.dart';
 import 'package:flutter/material.dart';
 import 'package:app_receitas/app/di_setup.dart';
 import 'package:app_receitas/features/receitas/domain/entities/receita.dart';
@@ -80,6 +81,21 @@ class _FormReceitaViewState extends State<FormReceitaView> {
             backgroundColor: Colors.red,
           ),
         );
+      }
+
+      if (state.receitaGerada != null) {
+        
+        _tituloController.text = state.receitaGerada!.titulo;
+        _tempoPreparoController.text = state.receitaGerada!.tempoPreparo;
+        _ingredientesController.text = state.receitaGerada!.ingredientes;
+        _preparoController.text = state.receitaGerada!.modoPreparo;
+        
+        
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Receita preenchida pela IA! 🪄')),
+          );
+        }
       }
     });
   }
@@ -218,6 +234,16 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.receita == null ? 'Nova Receita' : 'Editar Receita'),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.auto_awesome,
+              color: Colors.purple,
+            ), // Ícone de "mágica"
+            tooltip: 'Criar com IA',
+            onPressed: _abrirGeradorIA,
+          ),
+        ],
       ),
       body: SafeArea(
         child: StreamBuilder<FormReceitaState>(
@@ -349,4 +375,66 @@ class _FormReceitaViewState extends State<FormReceitaView> {
       },
     );
   }
+
+  Future<void> _abrirGeradorIA() async {
+    final controllerPrompt = TextEditingController();
+
+    final temImagem = _imagemParaExibir != null;
+
+
+
+    final comando = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('✨ Chef IA'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Descreva o que quer comer ou os ingredientes.'),
+            if (temImagem) 
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                child: Row(
+                  children: const [
+                    Icon(Icons.image, size: 16, color: Colors.green),
+                    SizedBox(width: 5),
+                    Expanded(child: Text("Vou usar a foto selecionada também!", style: TextStyle(fontSize: 12, color: Colors.green))),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: controllerPrompt,
+              decoration: const InputDecoration(
+                hintText: 'Ex: O que posso fazer com isso?',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controllerPrompt.text),
+            child: const Text('Gerar Mágica'),
+          ),
+        ],
+      ),
+    );
+
+    if (comando != null && comando.isNotEmpty) {
+     _viewModel.despachar(
+      GerarReceitaIAIntent(
+        comando,
+        caminhoImagem: temImagem ? _imagemParaExibir!.path : null,
+        )
+      );
+    }
+  }
+
 }

@@ -1,7 +1,8 @@
 # Minhas Receitas 🍳
 
-Um aplicativo móvel para gestão pessoal de receitas culinárias, desenvolvido em **Flutter** com foco em arquitetura limpa, performance e funcionamento offline.  
-Este projeto foi desenvolvido como atividade prática da disciplina **M4.25 | Desenvolvimento de Aplicativos Móveis nas Engenharias** da faculdade **Unimar**.
+Um aplicativo móvel para gestão pessoal de receitas culinárias, desenvolvido em **Flutter** com foco em arquitetura limpa, performance e inteligência artificial.
+
+Este projeto foi desenvolvido originalmente como atividade prática da disciplina **M4.25 | Desenvolvimento de Aplicativos Móveis nas Engenharias** da faculdade **Unimar**, e evoluído com recursos de IA Generativa.**Unimar**.
 
 ---
 
@@ -11,7 +12,12 @@ Este projeto foi desenvolvido como atividade prática da disciplina **M4.25 | De
 - **Criar**: Cadastro de novas receitas com título, tempo de preparo, ingredientes, modo de preparo e foto.  
 - **Ler**: Listagem visual das receitas e tela de detalhes ("Modo Cozinha") focada na leitura.  
 - **Atualizar**: Edição completa de todos os campos e substituição da foto.  
-- **Deletar**: Remoção de receitas com diálogo de confirmação de segurança.  
+- **Deletar**: Remoção de receitas com diálogo de confirmação de segurança.
+
+### 🤖 Inteligência Artificial (Novo!)
+- **Chef IA**: Crie receitas completas apenas descrevendo o que você quer comer (ex: "Sobremesa rápida com chocolate").
+- **Visão Computacional**: Tire uma foto dos ingredientes que você tem na geladeira e a IA sugere uma receita baseada neles.
+- **Preenchimento Automático**: A IA estrutura a resposta e preenche os campos de Título, Ingredientes, Tempo e Modo de Preparo automaticamente.
 
 ### Persistência Local (Offline-First)
 - Utiliza **Hive (NoSQL)** para salvar dados instantaneamente.  
@@ -35,6 +41,7 @@ O projeto segue rigorosamente os princípios da **Clean Architecture** combinada
 
 - **Linguagem**: Dart  
 - **Framework**: Flutter  
+- **IA & ML**: Google Generative AI SDK (Gemini 2.5 Flash)
 - **Gerenciamento de Estado**: Stream / RxDart (*BehaviorSubject & PublishSubject*)  
 - **Injeção de Dependência**: get_it  
 - **Banco de Dados Local**: hive e hive_flutter  
@@ -64,6 +71,16 @@ lib/
 ### Pré-requisitos
 - Flutter SDK instalado e configurado.  
 - Dispositivo Android ou iOS (físico ou emulador).  
+- Uma **API Key** do Google Gemini (Obtenha no [Google AI Studio](https://aistudio.google.com/)).
+
+### Configuração de Ambiente (.env)
+Este projeto utiliza variáveis de ambiente para segurança.
+1.  Na raiz do projeto, crie um arquivo chamado `.env`.
+2.  Adicione sua chave no arquivo (conforme `.env_example`):
+    ```env
+    LLM_API_KEY=SuaChaveDoGeminiAqui
+    LLM_MODEL=gemini-2.5-flash
+    ```
 
 ### Instalação
 ```bash
@@ -77,8 +94,8 @@ flutter pub get
 # Gere os adaptadores do Hive (necessário para o banco de dados)
 dart run build_runner build --delete-conflicting-outputs
 
-# Execute o aplicativo
-flutter run
+# Execute o aplicativo (passando o arquivo de ambiente)
+flutter run --dart-define-from-file=.env
 ```
 
 ---
@@ -91,7 +108,7 @@ flutter run
 ## 🔮 Melhorias Futuras
 - [ ] Filtro de busca por nome ou ingrediente.  
 - [ ] Categorização por tags (Doce, Salgado, Vegano).  
-- [ ] Integração com IA (**Gemini Nano**) para sugestão de receitas offline.  
+- [ ] Implementação híbrida com Gemini Nano (On-device) para dispositivos compatíveis.  
 - [ ] Backup na nuvem (Firebase).  
 
 ---

@@ -21,3 +21,8 @@ class UnknownFailure extends Failure {
   const UnknownFailure({String mensagem = 'Ocorreu um erro inesperado.'})
       : super(mensagem);
 }
+
+class ServerFailure extends Failure {
+  const ServerFailure({String mensagem = 'Erro de comunicação com o servidor.'})
+      : super(mensagem);
+}

@@ -1,3 +1,6 @@
+import 'package:app_receitas/features/receitas/data/datasources/gemini_datasource.dart';
+import 'package:app_receitas/features/receitas/data/datasources/i_receita_llm_datasource.dart';
+import 'package:app_receitas/features/receitas/domain/usecases/gerar_receita_ia.dart';
 import 'package:app_receitas/features/receitas/presentation/form_receita/form_receita_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,6 +21,10 @@ Future<void> setupDI() async {
   final receitaBox = await Hive.openBox<ReceitaModel>('receitas');
   getIt.registerSingleton<Box<ReceitaModel>>(receitaBox);
 
+  getIt.registerLazySingleton<IReceitaLLMDatasource>(
+    () => GeminiDatasource(),
+  );
+
   getIt.registerLazySingleton<GetTodasReceitasUseCase>(
     () => GetTodasReceitasUseCase(getIt<IReceitaRepository>()),
   );
@@ -27,10 +34,14 @@ Future<void> setupDI() async {
   getIt.registerLazySingleton<DeletarReceitaUseCase>(
     () => DeletarReceitaUseCase(getIt<IReceitaRepository>()),
   );
+  getIt.registerLazySingleton<GerarReceitaIAUseCase>(
+    () => GerarReceitaIAUseCase(getIt<IReceitaRepository>()),
+  );
 
   getIt.registerLazySingleton<IReceitaRepository>(
     () => ReceitaRepositoryImpl(
       localDataSource: getIt<IReceitaLocalDataSource>(),
+      llmDataSource: getIt<IReceitaLLMDatasource>(),
     ),
   );
 
@@ -46,6 +57,10 @@ Future<void> setupDI() async {
   );
 
   getIt.registerFactory<FormReceitaViewModel>(
-    () => FormReceitaViewModel(salvarReceitaUseCase: getIt()),
+    () => FormReceitaViewModel(
+      salvarReceitaUseCase: getIt(),
+      gerarReceitaIAUseCase: getIt(),
+      receitaInicial: null
+    ),
   );
 }

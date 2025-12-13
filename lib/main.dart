@@ -13,7 +13,7 @@ Future<void> main() async {
 
   await setupDI();
 
-  await getIt.allReady();
+  await getIt.allReady();  
 
   runApp(const AppWidget());
 }

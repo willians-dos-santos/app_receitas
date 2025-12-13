@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_receitas/features/receitas/domain/usecases/gerar_receita_ia.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../../domain/entities/receita.dart';
@@ -10,6 +11,7 @@ import 'form_receita_state.dart';
 
 class FormReceitaViewModel {
   final SalvarReceitaUseCase _salvarReceitaUseCase;
+  final GerarReceitaIAUseCase _gerarReceitaIAUseCase;
 
   final BehaviorSubject<FormReceitaState> _stateSubject;
   ValueStream<FormReceitaState> get state => _stateSubject.stream;
@@ -23,8 +25,10 @@ class FormReceitaViewModel {
 
   FormReceitaViewModel({
     required SalvarReceitaUseCase salvarReceitaUseCase,
+    required GerarReceitaIAUseCase gerarReceitaIAUseCase,
     Receita? receitaInicial,
   }) : _salvarReceitaUseCase = salvarReceitaUseCase,
+       _gerarReceitaIAUseCase = gerarReceitaIAUseCase,
        _stateSubject = BehaviorSubject<FormReceitaState>.seeded(
          FormReceitaState.initial().copyWith(
            imagemSelecionada: receitaInicial?.caminhoImagem != null
@@ -38,6 +42,35 @@ class FormReceitaViewModel {
 
   Future<void> _processarIntent(FormReceitaIntent evento) async {
     final currentState = _stateSubject.value;
+
+    if (evento is GerarReceitaIAIntent) {
+      _stateSubject.add(currentState.copyWith(status: FormStatus.carregando));
+      
+      final result = await _gerarReceitaIAUseCase(
+        GerarReceitaIAParams(evento.prompt, caminhoImagem: evento.caminhoImagem),
+      );
+
+      result.fold(
+        (failure) => _stateSubject.add(currentState.copyWith(
+          status: FormStatus.erro,
+          mensagemErro: "Erro na IA: ${failure.mensagem}",
+        )),
+        (receita) {
+          if (receita != null) {
+            _stateSubject.add(currentState.copyWith(
+              status: FormStatus.sucesso, // Ou crie um status específico 'receitaGerada'
+              receitaGerada: receita,
+            ));
+          } else {
+             _stateSubject.add(currentState.copyWith(
+              status: FormStatus.erro,
+              mensagemErro: "A IA não conseguiu gerar uma receita válida.",
+            ));
+          }
+        },
+      );
+      return; 
+    }
 
     if (evento is SalvarReceitaIntent) {
       _stateSubject.add(currentState.copyWith(status: FormStatus.carregando));
