@@ -26,3 +26,8 @@ class ServerFailure extends Failure {
   const ServerFailure({String mensagem = 'Erro de comunicação com o servidor.'})
       : super(mensagem);
 }
+
+class NonFoodFailure extends Failure {
+  const NonFoodFailure({String mensagem = 'Isto não parece ser comestível! 🧐'})
+      : super(mensagem);
+}

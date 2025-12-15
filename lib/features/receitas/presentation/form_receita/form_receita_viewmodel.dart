@@ -53,12 +53,12 @@ class FormReceitaViewModel {
       result.fold(
         (failure) => _stateSubject.add(currentState.copyWith(
           status: FormStatus.erro,
-          mensagemErro: "Erro na IA: ${failure.mensagem}",
+          mensagemErro: failure.mensagem,
         )),
         (receita) {
           if (receita != null) {
             _stateSubject.add(currentState.copyWith(
-              status: FormStatus.sucesso, // Ou crie um status específico 'receitaGerada'
+              status: FormStatus.sucesso, 
               receitaGerada: receita,
             ));
           } else {

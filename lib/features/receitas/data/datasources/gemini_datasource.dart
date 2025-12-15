@@ -24,17 +24,22 @@ class GeminiDatasource implements IReceitaLLMDatasource {
 
     final prompt =
         '''
-      Crie uma receita culinária baseada neste pedido: "$comando".
-      ${caminhoImagem != null ? "Analise também a imagem dos ingredientes enviada." : ""}      
+      Analise o pedido e/ou a imagem enviada. 
+      Se NÃO FOR sobre comida, retorne um JSON com o campo isFood igual a False e outros campos vazios ou nulos.
+      Se FOR relacinadi a comida, aja como um chef experiente e crie uma receita.
+
+           
       Responda APENAS com um JSON seguindo este esquema exato, sem markdown:
       {
+        "isFood": true,
         "titulo": "Nome do Prato",
         "tempoPreparo": "ex: 45 min",
         "ingredientes": ["Ingrediente 1", "Ingrediente 2"],
         "modoPreparo": ["Passo 1", "Passo 2"]
       }
       
-      Se o pedido não for sobre comida, retorne um JSON com todos os campos vazios ou nulos.
+      Pedido: "$comando".
+      ${caminhoImagem != null ? "Imagem: $caminhoImagem" : ""}
     ''';
 
     List<Part> parts = [TextPart(prompt)];

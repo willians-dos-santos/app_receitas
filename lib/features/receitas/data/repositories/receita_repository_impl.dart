@@ -1,3 +1,5 @@
+import 'package:app_receitas/app/exceptions.dart';
+import 'package:app_receitas/core/failures/failures.dart';
 import 'package:app_receitas/features/receitas/data/datasources/i_receita_llm_datasource.dart';
 
 import '../../domain/entities/receita.dart';
@@ -42,7 +44,9 @@ class ReceitaRepositoryImpl implements IReceitaRepository {
     
     if (map == null) return null;
 
-    
+    if (map['isFood'] == false) {
+      throw NonFoodException();
+    }
     return Receita(
       id: '', 
       titulo: map['titulo'] ?? 'Sem título',

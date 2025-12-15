@@ -1,0 +1,1 @@
+class NonFoodException implements Exception {}

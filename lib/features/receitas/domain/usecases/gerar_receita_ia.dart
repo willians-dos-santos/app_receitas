@@ -1,3 +1,4 @@
+import 'package:app_receitas/app/exceptions.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../core/failures/failures.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -20,7 +21,10 @@ class GerarReceitaIAUseCase implements UseCase<Receita?, GerarReceitaIAParams> {
     try {
       final receita = await repository.gerarReceitaIA(params.prompt, caminhoImagem: params.caminhoImagem);
       return Right(receita);
-    } catch (e) {
+    }on NonFoodException {
+      return const Left(NonFoodFailure()); 
+    } 
+    catch (e) {
       return Left(ServerFailure(mensagem: e.toString()));
     }
   }
