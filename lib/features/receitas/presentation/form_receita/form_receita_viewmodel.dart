@@ -47,7 +47,7 @@ class FormReceitaViewModel {
       _stateSubject.add(currentState.copyWith(status: FormStatus.carregando));
       
       final result = await _gerarReceitaIAUseCase(
-        GerarReceitaIAParams(evento.prompt, caminhoImagem: evento.caminhoImagem),
+        GerarReceitaIAParams(evento.prompt, filtros: evento.filtros, caminhoImagem: evento.caminhoImagem),
       );
 
       result.fold(

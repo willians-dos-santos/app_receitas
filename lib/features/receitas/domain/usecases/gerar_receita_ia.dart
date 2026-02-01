@@ -7,8 +7,9 @@ import '../repositories/i_receita_repository.dart';
 
 class GerarReceitaIAParams {
   final String prompt;
+  final List<String>? filtros;
   final String? caminhoImagem;
-  GerarReceitaIAParams(this.prompt, {this.caminhoImagem});
+  GerarReceitaIAParams(this.prompt, {this.filtros, this.caminhoImagem});
 }
 
 class GerarReceitaIAUseCase implements UseCase<Receita?, GerarReceitaIAParams> {
@@ -19,7 +20,7 @@ class GerarReceitaIAUseCase implements UseCase<Receita?, GerarReceitaIAParams> {
   @override
   Future<Either<Failure, Receita?>> call(GerarReceitaIAParams params) async {
     try {
-      final receita = await repository.gerarReceitaIA(params.prompt, caminhoImagem: params.caminhoImagem);
+      final receita = await repository.gerarReceitaIA(params.prompt, filtros: params.filtros, caminhoImagem: params.caminhoImagem);
       return Right(receita);
     }on NonFoodException {
       return const Left(NonFoodFailure()); 

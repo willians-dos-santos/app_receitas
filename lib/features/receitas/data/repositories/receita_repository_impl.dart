@@ -39,8 +39,8 @@ class ReceitaRepositoryImpl implements IReceitaRepository {
   }
   
   @override
-  Future<Receita?> gerarReceitaIA(String prompt, {String? caminhoImagem}) async {
-    final map = await llmDataSource.gerarReceita(prompt, caminhoImagem: caminhoImagem);
+  Future<Receita?> gerarReceitaIA(String prompt, {List<String>? filtros, String? caminhoImagem}) async {
+    final map = await llmDataSource.gerarReceita(prompt, filtros: filtros, caminhoImagem: caminhoImagem);
     
     if (map == null) return null;
 

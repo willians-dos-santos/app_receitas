@@ -5,11 +5,9 @@ import 'package:app_receitas/features/receitas/data/datasources/i_receita_llm_da
 import 'package:google_generative_ai/google_generative_ai.dart';
 
 class GeminiDatasource implements IReceitaLLMDatasource {
-  // ATENÇÃO: Em um app real, use --dart-define para esconder a chave ou um backend.
-  // Para testes, pode colocar direto aqui, mas não suba para o GitHub público com a chave real.  
   @override
-  Future<Map<String, dynamic>?> gerarReceita(String comando, {String? caminhoImagem}) async {
-    
+  Future<Map<String, dynamic>?> gerarReceita(String comando,
+      {List<String>? filtros, String? caminhoImagem}) async {
     final model = GenerativeModel(
       model: Env.LLMmodel,
       apiKey: Env.LLMApiKey,
@@ -22,12 +20,21 @@ class GeminiDatasource implements IReceitaLLMDatasource {
       ],
     );
 
-    final prompt =
-        '''
+    final condicao = {
+      false: () => "",
+      true: () =>
+          "Respeite estritamente estas restrições alimentares: ${filtros!.join(', ')}."
+    };
+
+    final contemFiltros = filtros != null && filtros.isNotEmpty;
+    final restricao = condicao[contemFiltros]!();
+
+    
+    final prompt = '''
       Analise o pedido e/ou a imagem enviada. 
       Se NÃO FOR sobre comida, retorne um JSON com o campo isFood igual a False e outros campos vazios ou nulos.
       Se FOR relacinadi a comida, aja como um chef experiente e crie uma receita.
-
+      $restricao
            
       Responda APENAS com um JSON seguindo este esquema exato, sem markdown:
       {
@@ -44,28 +51,46 @@ class GeminiDatasource implements IReceitaLLMDatasource {
 
     List<Part> parts = [TextPart(prompt)];
 
-    // SE tiver imagem, lê os bytes e adiciona ao request
     if (caminhoImagem != null) {
       final file = File(caminhoImagem);
       if (await file.exists()) {
         final bytes = await file.readAsBytes();
-        // O Gemini infere o tipo, mas image/jpeg é seguro para fotos de câmera
         parts.add(DataPart('image/jpeg', bytes));
       }
     }
 
-    try {
-      
-      final response = await model.generateContent([Content.multi(parts)]);
+    // configurações de retry com exponential backoff 
+    int retryCount = 0;
+    const maxRetries = 5;
+    final delays = [1000, 2000, 4000, 8000, 16000]; 
 
-      print('Resposta Bruta: ${response.text}');
+    while (retryCount <= maxRetries) {
+      try {
+        final response = await model.generateContent([Content.multi(parts)]);
 
-      if (response.text != null) {
-        return jsonDecode(response.text!);
+        if (response.text != null) {
+          return jsonDecode(response.text!);
+        }
+        
+        
+        return null;
+      } catch (e) {
+        
+        if (retryCount >= maxRetries) {
+          
+          print('Não foi possível obter resposta do Gemini após $maxRetries tentativas.');
+          return null;
+        }
+
+        
+        await Future.delayed(Duration(milliseconds: delays[retryCount]));
+        retryCount++;
+        
+        
+        continue;
       }
-    } catch (e) {
-      print('Erro Gemini: $e');
     }
+
     return null;
   }
 }

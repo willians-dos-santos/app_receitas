@@ -4,7 +4,7 @@ abstract class IReceitaRepository {
   Stream<List<Receita>> getTodasReceitas();
   Future<void> salvarReceita(Receita receita);
   Future<void> deletarReceita(String id);
-  Future<Receita?> gerarReceitaIA(String prompt, {String? caminhoImagem});
+  Future<Receita?> gerarReceitaIA(String prompt, {List<String>? filtros, String? caminhoImagem});
 }
 
 

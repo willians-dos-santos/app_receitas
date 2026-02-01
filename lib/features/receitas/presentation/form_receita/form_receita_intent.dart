@@ -29,9 +29,10 @@ class SalvarReceitaIntent extends FormReceitaIntent {
 
 class GerarReceitaIAIntent extends FormReceitaIntent {
   final String prompt;
+  final List<String>? filtros;
   final String? caminhoImagem;
-  const GerarReceitaIAIntent(this.prompt, {this.caminhoImagem});
+  const GerarReceitaIAIntent(this.prompt, {this.filtros, this.caminhoImagem});
   
   @override
-  List<Object?> get props => [prompt, caminhoImagem];
+  List<Object?> get props => [prompt, filtros, caminhoImagem];
 }

@@ -110,6 +110,20 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     super.dispose();
   }
 
+  bool _temAlteracoes() {
+    if (widget.receita == null) {
+      return _tituloController.text.isNotEmpty ||
+          _ingredientesController.text.isNotEmpty ||
+          _preparoController.text.isNotEmpty ||
+          _tempoPreparoController.text.isNotEmpty;
+    }
+    
+    return _tituloController.text != widget.receita!.titulo ||
+        _ingredientesController.text != widget.receita!.ingredientes ||
+        _preparoController.text != widget.receita!.modoPreparo ||
+        _tempoPreparoController.text != widget.receita!.tempoPreparo;
+  }
+
   String _limparTextoColado(String texto) {
     var textoLimpo = texto
         .split('\n')
@@ -229,94 +243,136 @@ class _FormReceitaViewState extends State<FormReceitaView> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.receita == null ? 'Nova Receita' : 'Editar Receita'),
+  Future<bool> _pedirConfirmacaoSair(BuildContext context) async {
+    final resultado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Descartar alterações?'),
+        content: const Text(
+            'Você preencheu algumas informações. Se sair agora, as alterações serão perdidas.'),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.auto_awesome,
-              color: Colors.purple,
-            ), // Ícone de "mágica"
-            tooltip: 'Criar com IA',
-            onPressed: _abrirGeradorIA,
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: const Text('Continuar editando'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text('Descartar'),
           ),
         ],
       ),
-      body: SafeArea(
-        child: StreamBuilder<FormReceitaState>(
-          stream: _viewModel.state,
-          initialData: FormReceitaState.initial(),
-          builder: (context, snapshot) {
-            final state = snapshot.data!;
+    );
+    return resultado ?? false;
+  }
 
-            if (state.status == FormStatus.carregando) {
-              return const Center(child: CircularProgressIndicator());
-            }
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildSeletorImagem(),
-                    const SizedBox(height: 24),
-                    _buildTextFormField(
-                      controller: _tituloController,
-                      label: 'Título',
-                      icon: Icons.title,
-                      textCapitalization: TextCapitalization.sentences,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
+        if (!_temAlteracoes()){
+          Navigator.of(context).pop();
+          return;        
+        }
 
-                    _buildTextFormField(
-                      controller: _tempoPreparoController,
-                      label: 'Tempo de Preparo (ex: 30 min)',
-                      icon: Icons.timer,
-                      keyboardType: TextInputType.text,
-                      textInputAction: TextInputAction.next,
-                    ),
+        final sair = await _pedirConfirmacaoSair(context);
+        if (sair && context.mounted) {
+          Navigator.of(context).pop();
+        }
 
-                    const SizedBox(height: 16),
-                    _buildTextFormField(
-                      controller: _ingredientesController,
-                      label: 'Ingredientes',
-                      icon: Icons.list_alt,
-                      maxLines: 5,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextFormField(
-                      controller: _preparoController,
-                      label: 'Modo de Preparo',
-                      icon: Icons.soup_kitchen_outlined,
-                      maxLines: 8,
-                      keyboardType: TextInputType.multiline,
-                      textInputAction: TextInputAction.newline,
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                    const SizedBox(height: 32),
 
-                    ElevatedButton.icon(
-                      onPressed: _tentarSalvar,
-                      icon: const Icon(Icons.save),
-                      label: const Text('Salvar Receita'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.receita == null ? 'Nova Receita' : 'Editar Receita'),
+          
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.auto_awesome,
+                color: Colors.purple,
+              ), 
+              tooltip: 'Criar com IA',
+              onPressed: _abrirGeradorIA,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: StreamBuilder<FormReceitaState>(
+            stream: _viewModel.state,
+            initialData: FormReceitaState.initial(),
+            builder: (context, snapshot) {
+              final state = snapshot.data!;
+      
+              if (state.status == FormStatus.carregando) {
+                return const Center(child: CircularProgressIndicator());
+              }
+      
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildSeletorImagem(),
+                      const SizedBox(height: 24),
+                      _buildTextFormField(
+                        controller: _tituloController,
+                        label: 'Título',
+                        icon: Icons.title,
+                        textCapitalization: TextCapitalization.sentences,
+                        textInputAction: TextInputAction.next,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+      
+                      _buildTextFormField(
+                        controller: _tempoPreparoController,
+                        label: 'Tempo de Preparo (ex: 30 min)',
+                        icon: Icons.timer,
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.next,
+                      ),
+      
+                      const SizedBox(height: 16),
+                      _buildTextFormField(
+                        controller: _ingredientesController,
+                        label: 'Ingredientes',
+                        icon: Icons.list_alt,
+                        maxLines: 5,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextFormField(
+                        controller: _preparoController,
+                        label: 'Modo de Preparo',
+                        icon: Icons.soup_kitchen_outlined,
+                        maxLines: 8,
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 32),
+      
+                      ElevatedButton.icon(
+                        onPressed: _tentarSalvar,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Salvar Receita'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -378,62 +434,109 @@ class _FormReceitaViewState extends State<FormReceitaView> {
 
   Future<void> _abrirGeradorIA() async {
     final controllerPrompt = TextEditingController();
+    
+    
+    bool vegano = false;
+    bool semGluten = false;
+    bool lowCarb = false;
 
-    final temImagem = _imagemParaExibir != null;
+    
+    List<String> coletarFiltros() {
+      final lista = <String>[];
+      if (vegano) lista.add("Vegano (Sem produtos animais)");
+      if (semGluten) lista.add("Sem Glúten");
+      if (lowCarb) lista.add("Low Carb (Baixo carboidrato)");
+      return lista;
+    }
 
-
-
-    final comando = await showDialog<String>(
+    final resultado = await showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('✨ Chef IA'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Descreva o que quer comer ou os ingredientes.'),
-            if (temImagem) 
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                child: Row(
-                  children: const [
-                    Icon(Icons.image, size: 16, color: Colors.green),
-                    SizedBox(width: 5),
-                    Expanded(child: Text("Vou usar a foto selecionada também!", style: TextStyle(fontSize: 12, color: Colors.green))),
+      barrierDismissible: false,
+      builder: (context) {
+        
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('✨ Chef IA'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('O que deseja comer?'),
+                    if (_imagemParaExibir != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.image, size: 16, color: Colors.green),
+                            SizedBox(width: 5),
+                            Text("Usando foto anexa", style: TextStyle(color: Colors.green, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    
+                    TextField(
+                      controller: controllerPrompt,
+                      decoration: const InputDecoration(
+                        hintText: 'Ex: Bolo de cenoura',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    const Text('Restrições:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    
+                    
+                    CheckboxListTile(
+                      title: const Text("Vegano"),
+                      value: vegano,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setStateDialog(() => vegano = val!),
+                    ),
+                    CheckboxListTile(
+                      title: const Text("Sem Glúten"),
+                      value: semGluten,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setStateDialog(() => semGluten = val!),
+                    ),
+                    CheckboxListTile(
+                      title: const Text("Low Carb"),
+                      value: lowCarb,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) => setStateDialog(() => lowCarb = val!),
+                    ),
                   ],
                 ),
               ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: controllerPrompt,
-              decoration: const InputDecoration(
-                hintText: 'Ex: O que posso fazer com isso?',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, controllerPrompt.text),
-            child: const Text('Gerar Mágica'),
-          ),
-        ],
-      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, {
+                      'prompt': controllerPrompt.text,
+                      'filtros': coletarFiltros(),
+                    });
+                  },
+                  child: const Text('Gerar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
 
-    if (comando != null && comando.isNotEmpty) {
-     _viewModel.despachar(
-      GerarReceitaIAIntent(
-        comando,
-        caminhoImagem: temImagem ? _imagemParaExibir!.path : null,
-        )
-      );
+    if (resultado != null && (resultado['prompt'] as String).isNotEmpty) {
+      _viewModel.despachar(GerarReceitaIAIntent(
+        resultado['prompt'],
+        filtros: resultado['filtros'], 
+        caminhoImagem: _imagemParaExibir?.path,
+      ));
     }
   }
 
